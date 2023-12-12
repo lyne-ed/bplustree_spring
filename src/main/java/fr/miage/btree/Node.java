@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Node<TKey extends Comparable<TKey>> {
-    protected final static int INNER_ORDER = 10;
+    protected final static int INNER_ORDER = 5;
     @JsonView(Views.Public.class)
     protected List<TKey> keys;
     protected Node<TKey> parentNode;
