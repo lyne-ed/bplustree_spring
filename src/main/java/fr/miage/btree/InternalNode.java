@@ -2,23 +2,31 @@ package fr.miage.btree;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
-    protected final static int INNERORDER = 4;
     @JsonView(Views.Public.class)
-    protected Object[] children;
+    protected List<Node> children;
 
     public InternalNode() {
-        this.keys = new Object[INNERORDER + 1];
-        this.children = new Object[INNERORDER + 2];
+        this.keys = new ArrayList<TKey>();
+        this.children = new ArrayList<Node>();
     }
 
     @SuppressWarnings("unchecked")
     public Node<TKey> getChild(int index) {
-        return (Node<TKey>)this.children[index];
+        return (Node<TKey>)this.children.get(index);
+    }
+
+    public void addChild( Node<TKey> child) {
+        this.children.add(child);
+        if (child != null)
+            child.setParent(this);
     }
 
     public void setChild(int index, Node<TKey> child) {
-        this.children[index] = child;
+        this.children.add(index,child);
         if (child != null)
             child.setParent(this);
     }
@@ -31,7 +39,7 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
     @Override
     public int search(TKey key) {
         int index = 0;
-        for (index = 0; index < this.getKeyCount(); ++index) {
+        for (index = 0; index < this.getKeyCount(); index++) {
             int cmp = this.getKey(index).compareTo(key);
             if (cmp == 0) {
                 return index + 1;
@@ -48,19 +56,11 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
     /* The codes below are used to support insertion operation */
 
     private void insertAt(int index, TKey key, Node<TKey> leftChild, Node<TKey> rightChild) {
-        // move space for the new key
-        for (int i = this.getKeyCount() + 1; i > index; --i) {
-            this.setChild(i, this.getChild(i - 1));
-        }
-        for (int i = this.getKeyCount(); i > index; --i) {
-            this.setKey(i, this.getKey(i - 1));
-        }
-
         // insert the new key
         this.setKey(index, key);
-        this.setChild(index, leftChild);
+        if (!this.children.contains(leftChild))
+            this.setChild(index, leftChild);
         this.setChild(index + 1, rightChild);
-        this.keyCount += 1;
     }
 
     /**
@@ -68,21 +68,22 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
      */
     @Override
     protected Node<TKey> split() {
-        int midIndex = this.getKeyCount() / 2;
+        int midIndex = this.getMiddleIndex();
 
         InternalNode<TKey> newRNode = new InternalNode<TKey>();
-        for (int i = midIndex + 1; i < this.getKeyCount(); ++i) {
-            newRNode.setKey(i - midIndex - 1, this.getKey(i));
-            this.setKey(i, null);
+
+        // move keys and children to the new right node
+       while(this.keys.size() > midIndex) {
+            TKey movingKey = this.getKey(midIndex);
+            newRNode.addKey( movingKey);
+            this.keys.remove(movingKey);
+
+            Node<TKey> movingChild = this.getChild(midIndex + 1);
+            movingChild.setParent(newRNode);
+            newRNode.addChild(movingChild);
+            this.children.remove(movingChild);
         }
-        for (int i = midIndex + 1; i <= this.getKeyCount(); ++i) {
-            newRNode.setChild(i - midIndex - 1, this.getChild(i));
-            newRNode.getChild(i - midIndex - 1).setParent(newRNode);
-            this.setChild(i, null);
-        }
-        this.setKey(midIndex, null);
-        newRNode.keyCount = this.getKeyCount() - midIndex - 1;
-        this.keyCount = midIndex;
+        newRNode.keys.remove(0);
 
         return newRNode;
     }
@@ -104,20 +105,11 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
         }
     }
 
-
-
-
     /* The codes below are used to support delete operation */
 
     private void deleteAt(int index) {
-        int i = 0;
-        for (i = index; i < this.getKeyCount() - 1; ++i) {
-            this.setKey(i, this.getKey(i + 1));
-            this.setChild(i + 1, this.getChild(i + 2));
-        }
-        this.setKey(i, null);
-        this.setChild(i + 1, null);
-        --this.keyCount;
+        this.keys.remove(index);
+        this.children.remove(index + 1 );
     }
 
 
@@ -143,7 +135,7 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
     protected Node<TKey> processChildrenFusion(Node<TKey> leftChild, Node<TKey> rightChild) {
         int index = 0;
         while (index < this.getKeyCount() && this.getChild(index) != leftChild)
-            ++index;
+            index++;
         TKey sinkKey = this.getKey(index);
 
         // merge two children and the sink key into the left child node
@@ -179,14 +171,12 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
         int j = this.getKeyCount();
         this.setKey(j++, sinkKey);
 
-        for (int i = 0; i < rightSiblingNode.getKeyCount(); ++i) {
+        for (int i = 0; i < rightSiblingNode.getKeyCount(); i++) {
             this.setKey(j + i, rightSiblingNode.getKey(i));
         }
-        for (int i = 0; i < rightSiblingNode.getKeyCount() + 1; ++i) {
+        for (int i = 0; i < rightSiblingNode.getKeyCount() + 1; i++) {
             this.setChild(j + i, rightSiblingNode.getChild(i));
         }
-        this.keyCount += 1 + rightSiblingNode.getKeyCount();
-
         this.setRightSibling(rightSiblingNode.rightSibling);
         if (rightSiblingNode.rightSibling != null)
             rightSiblingNode.rightSibling.setLeftSibling(this);
@@ -202,7 +192,6 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
             int index = this.getKeyCount();
             this.setKey(index, sinkKey);
             this.setChild(index + 1, siblingNode.getChild(borrowIndex));
-            this.keyCount += 1;
 
             upKey = siblingNode.getKey(0);
             siblingNode.deleteAt(borrowIndex);

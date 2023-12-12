@@ -2,33 +2,40 @@ package fr.miage.btree;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class Node<TKey extends Comparable<TKey>> {
+    protected final static int INNER_ORDER = 10;
     @JsonView(Views.Public.class)
-    protected Object[] keys;
-    protected int keyCount;
+    protected List<TKey> keys;
     protected Node<TKey> parentNode;
     protected Node<TKey> leftSibling;
     protected Node<TKey> rightSibling;
 
 
     protected Node() {
-        this.keyCount = 0;
+        this.keys = new ArrayList<TKey>();
         this.parentNode = null;
         this.leftSibling = null;
         this.rightSibling = null;
     }
 
     public int getKeyCount() {
-        return this.keyCount;
+        return this.keys.size();
     }
 
     @SuppressWarnings("unchecked")
     public TKey getKey(int index) {
-        return (TKey)this.keys[index];
+        return (TKey)this.keys.get(index);
+    }
+
+    public void addKey(TKey key) {
+        this.keys.add(key);
     }
 
     public void setKey(int index, TKey key) {
-        this.keys[index] = key;
+        this.keys.add(index,key);
     }
 
     public Node<TKey> getParent() {
@@ -51,29 +58,36 @@ public abstract class Node<TKey extends Comparable<TKey>> {
     public abstract int search(TKey key);
 
 
+    public int getMiddleIndex() {
+        return (INNER_ORDER - 1) / 2;
+    }
 
     /* The codes below are used to support insertion operation */
 
     public boolean isOverflow() {
-        return this.getKeyCount() == this.keys.length;
+        return this.getKeyCount() > INNER_ORDER-1;
     }
 
     public Node<TKey> dealOverflow() {
-        int midIndex = this.getKeyCount() / 2;
+        int midIndex = getMiddleIndex();
         TKey upKey = this.getKey(midIndex);
 
         Node<TKey> newRNode = this.split();
 
+        // connect new sub-tree if new root is defined
         if (this.getParent() == null) {
             this.setParent(new InternalNode<TKey>());
         }
+
+        // attach new right node to parent
         newRNode.setParent(this.getParent());
 
         // maintain links of sibling nodes
         newRNode.setLeftSibling(this);
-        newRNode.setRightSibling(this.rightSibling);
-        if (this.getRightSibling() != null)
+        if (this.getRightSibling() != null) {
+            newRNode.setRightSibling(this.rightSibling);
             this.getRightSibling().setLeftSibling(newRNode);
+        }
         this.setRightSibling(newRNode);
 
         // push up a key to parent internal node
@@ -88,11 +102,11 @@ public abstract class Node<TKey extends Comparable<TKey>> {
     /* The codes below are used to support deletion operation */
 
     public boolean isUnderflow() {
-        return this.getKeyCount() < (this.keys.length / 2);
+        return this.getKeyCount() < (INNER_ORDER / 2);
     }
 
     public boolean canLendAKey() {
-        return this.getKeyCount() > (this.keys.length / 2);
+        return this.getKeyCount() > (INNER_ORDER / 2);
     }
 
     public Node<TKey> getLeftSibling() {
@@ -140,6 +154,7 @@ public abstract class Node<TKey extends Comparable<TKey>> {
             return this.getParent().processChildrenFusion(this, rightSibling);
         }
     }
+
 
     protected abstract void processChildrenTransfer(Node<TKey> borrower, Node<TKey> lender, int borrowIndex);
 

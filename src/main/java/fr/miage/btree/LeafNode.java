@@ -2,23 +2,29 @@ package fr.miage.btree;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> {
-    protected final static int LEAFORDER = 4;
     @JsonView(Views.Public.class)
-    private Object[] values;
+    private List<TValue> values;
 
     public LeafNode() {
-        this.keys = new Object[LEAFORDER + 1];
-        this.values = new Object[LEAFORDER + 1];
+        this.keys = new ArrayList<TKey>();
+        this.values = new ArrayList<TValue>();
     }
 
     @SuppressWarnings("unchecked")
     public TValue getValue(int index) {
-        return (TValue)this.values[index];
+        return (TValue)this.values.get(index);
+    }
+
+    public void addValue(TValue value) {
+        this.values.add(value);
     }
 
     public void setValue(int index, TValue value) {
-        this.values[index] = value;
+        this.values.add(index, value);
     }
 
     @Override
@@ -28,7 +34,7 @@ public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> 
 
     @Override
     public int search(TKey key) {
-        for (int i = 0; i < this.getKeyCount(); ++i) {
+        for (int i = 0; i < this.getKeyCount(); i++) {
             int cmp = this.getKey(i).compareTo(key);
             if (cmp == 0) {
                 return i;
@@ -47,21 +53,13 @@ public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> 
     public void insertKey(TKey key, TValue value) {
         int index = 0;
         while (index < this.getKeyCount() && this.getKey(index).compareTo(key) < 0)
-            ++index;
+            index++;
         this.insertAt(index, key, value);
     }
 
     private void insertAt(int index, TKey key, TValue value) {
-        // move space for the new key
-        for (int i = this.getKeyCount() - 1; i >= index; --i) {
-            this.setKey(i + 1, this.getKey(i));
-            this.setValue(i + 1, this.getValue(i));
-        }
-
-        // insert new key and value
         this.setKey(index, key);
         this.setValue(index, value);
-        ++this.keyCount;
     }
 
 
@@ -70,18 +68,13 @@ public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> 
      */
     @Override
     protected Node<TKey> split() {
-        int midIndex = this.getKeyCount() / 2;
+        int midIndex = getMiddleIndex();
 
         LeafNode<TKey, TValue> newRNode = new LeafNode<TKey, TValue>();
-        for (int i = midIndex; i < this.getKeyCount(); ++i) {
-            newRNode.setKey(i - midIndex, this.getKey(i));
-            newRNode.setValue(i - midIndex, this.getValue(i));
-            this.setKey(i, null);
-            this.setValue(i, null);
+        while (this.getKeyCount() > midIndex) {
+            newRNode.insertKey(this.getKey(midIndex), this.getValue(midIndex));
+            this.deleteAt(midIndex);
         }
-        newRNode.keyCount = this.getKeyCount() - midIndex;
-        this.keyCount = midIndex;
-
         return newRNode;
     }
 
@@ -89,9 +82,6 @@ public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> 
     protected Node<TKey> pushUpKey(TKey key, Node<TKey> leftChild, Node<TKey> rightNode) {
         throw new UnsupportedOperationException();
     }
-
-
-
 
     /* The codes below are used to support deletion operation */
 
@@ -105,14 +95,8 @@ public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> 
     }
 
     private void deleteAt(int index) {
-        int i = index;
-        for (i = index; i < this.getKeyCount() - 1; ++i) {
-            this.setKey(i, this.getKey(i + 1));
-            this.setValue(i, this.getValue(i + 1));
-        }
-        this.setKey(i, null);
-        this.setValue(i, null);
-        --this.keyCount;
+        this.keys.remove(index);
+        this.values.remove(index);
     }
 
     @Override
@@ -126,19 +110,17 @@ public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> 
     }
 
     /**
-     * Notice that the key sunk from parent is be abandoned.
+     * Notice that the key sunk from parent is abandoned.
      */
     @Override
     @SuppressWarnings("unchecked")
     protected void fusionWithSibling(TKey sinkKey, Node<TKey> rightSibling) {
         LeafNode<TKey, TValue> siblingLeaf = (LeafNode<TKey, TValue>)rightSibling;
 
-        int j = this.getKeyCount();
-        for (int i = 0; i < siblingLeaf.getKeyCount(); ++i) {
-            this.setKey(j + i, siblingLeaf.getKey(i));
-            this.setValue(j + i, siblingLeaf.getValue(i));
+        for (int i = 0; i < siblingLeaf.getKeyCount(); i++) {
+            this.addKey(siblingLeaf.getKey(i));
+            this.addValue(siblingLeaf.getValue(i));
         }
-        this.keyCount += siblingLeaf.getKeyCount();
 
         this.setRightSibling(siblingLeaf.rightSibling);
         if (siblingLeaf.rightSibling != null)
