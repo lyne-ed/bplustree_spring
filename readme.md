@@ -40,5 +40,7 @@ Next, you can try to implement a few features, the minimum being:
 ## How to submit your work
 Your work should only be submitted through the Github classroom assignment link. You should not create a pull request to the original repository. (https://classroom.github.com/a/0oMLSUuz)
 
-
+## References
+Based on the following repository : https://github.com/linli2016/BPlusTree
+Heavily changed to incorporate real b+ tree constraints and to use dynamic collections instead of fixed size arrays.
 
