@@ -19,7 +19,7 @@ The project is using Gradle as build tool. To run the project, execute the follo
 ``` 
 Project will then be available at http://localhost:8080
 
-## Frontend
+## Frontend /!\ WORK IN PROGRESS /!\
 To be able to see clearly the tree structure, a frontend application was developed using Angular. The frontend application is available at http://localhost:4200.
 
 To run the frontend application, execute the following command:
