@@ -14,7 +14,6 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
         this.children = new ArrayList<Node>();
     }
 
-    @SuppressWarnings("unchecked")
     public Node<TKey> getChild(int index) {
         return (Node<TKey>)this.children.get(index);
     }
@@ -53,8 +52,13 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
     }
 
 
-    /* The codes below are used to support insertion operation */
-
+    /**
+     * Insert a new key and its associated value into the B+ tree.
+     * @param index the index of the child node, if index == -1, insert the key to the leftmost
+     * @param key the new key
+     * @param leftChild the child node contains keys less than the new key
+     * @param rightChild the child node contains keys greater than the new key
+     */
     private void insertAt(int index, TKey key, Node<TKey> leftChild, Node<TKey> rightChild) {
         // insert the new key
         this.setKey(index, key);
@@ -65,6 +69,7 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
 
     /**
      * When splits a internal node, the middle key is kicked out and be pushed to parent node.
+     * @return
      */
     @Override
     protected Node<TKey> split() {
@@ -88,6 +93,13 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
         return newRNode;
     }
 
+    /**
+     * Push up the middle key of the current node after splitting to parent node.
+     * @param key the middle key after splitting
+     * @param leftChild the left node after splitting, it will be set as the child of current node's parent
+     * @param rightNode the right node after splitting, it will be set as the child of current node's parent
+     * @return
+     */
     @Override
     protected Node<TKey> pushUpKey(TKey key, Node<TKey> leftChild, Node<TKey> rightNode) {
         // find the target position of the new key
@@ -105,8 +117,11 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
         }
     }
 
-    /* The codes below are used to support delete operation */
-
+    /**
+     * When deletes a key from a internal node, the key is just removed from the node.
+     * @param index the index of the key which should be deleted
+     * @return
+     */
     private void deleteAt(int index) {
         this.keys.remove(index);
         this.children.remove(index + 1 );
@@ -130,6 +145,7 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
             this.setKey(borrowerChildIndex - 1, upKey);
         }
     }
+
 
     @Override
     protected Node<TKey> processChildrenFusion(Node<TKey> leftChild, Node<TKey> rightChild) {

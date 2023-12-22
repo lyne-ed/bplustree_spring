@@ -19,6 +19,7 @@ import java.util.stream.IntStream;
 public class BtreeApplication {
 
     int index = 0;
+
     // The tree key and value are both String, but you can change it to whatever you want, Generic types are used
     Btree<String, String> bplustree;
 
@@ -40,7 +41,7 @@ public class BtreeApplication {
                         // Used to test the tree building
 //                        bplustree.insert(faker.funnyName().name(), faker.address().fullAddress())
 
-                        // Used to test the Angular frontend
+                        // Used to test the Angular frontend (simpler data)
                         bplustree.insert(String.valueOf(i), String.valueOf(i))
         );
     }
@@ -57,6 +58,7 @@ public class BtreeApplication {
 
     /**
      * This method is used to illustrate the "add" process
+     * /!\ take care to change the data type if you change the tree key and value type
      * @return
      * @throws JsonProcessingException
      */
@@ -84,7 +86,7 @@ public class BtreeApplication {
     }
 
 
-/**
+    /**
      * This method is used to render the tree in the browser, with a json format
      * @param btree
      * @return
