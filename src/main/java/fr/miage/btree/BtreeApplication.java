@@ -80,7 +80,7 @@ public class BtreeApplication {
      */
     @GetMapping("/delete")
     public String delete() throws JsonProcessingException {
-        Btree<Integer, Integer> bplustree = new Btree<>();
+        bplustree = new Btree<>();
         index = 0;
         return renderView(bplustree);
     }
