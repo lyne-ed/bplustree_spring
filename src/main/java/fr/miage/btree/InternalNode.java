@@ -17,6 +17,14 @@ public class InternalNode <TKey extends Comparable<TKey>> extends Node<TKey> {
     public Node<TKey> getChild(int index) {
         return (Node<TKey>)this.children.get(index);
     }
+    
+    public List<Node> getChildren() {
+        return children;
+    }
+    
+    public void setChildren(List<Node> children) {
+        this.children = children;
+    }
 
     public void addChild( Node<TKey> child) {
         this.children.add(child);

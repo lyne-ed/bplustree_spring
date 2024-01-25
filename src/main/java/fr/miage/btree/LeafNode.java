@@ -137,4 +137,12 @@ public class LeafNode<TKey extends Comparable<TKey>, TValue> extends Node<TKey> 
 
         return borrowIndex == 0 ? sibling.getKey(0) : this.getKey(0);
     }
+    
+    public List<TValue> getValues() {
+        return values;
+    }
+    
+    public void setValues(List<TValue> values) {
+        this.values = values;
+    }
 }

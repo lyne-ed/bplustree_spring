@@ -1,7 +1,9 @@
 package fr.miage.btree;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+@JsonDeserialize(using = BtreeDeserializer.class)
 public class Btree <TKey extends Comparable<TKey>, TValue> {
 
     @JsonView(Views.Public.class)
@@ -10,8 +12,6 @@ public class Btree <TKey extends Comparable<TKey>, TValue> {
     public Btree() {
         this.root = new LeafNode<TKey, TValue>();
     }
-
-
 
     /**
      * Insert a new key and its associated value into the B+ tree.
@@ -66,5 +66,9 @@ public class Btree <TKey extends Comparable<TKey>, TValue> {
     @Override
     public String toString() {
         return this.root.toString();
+    }
+    
+    public void setRoot(Node<TKey> root) {
+        this.root = root;
     }
 }

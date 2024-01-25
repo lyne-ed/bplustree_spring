@@ -1,10 +1,18 @@
 package fr.miage.btree;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "nodeType")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = InternalNode.class, name = "InternalNode"),
+        @JsonSubTypes.Type(value = LeafNode.class, name = "LeafNode")
+})
 public abstract class Node<TKey extends Comparable<TKey>> {
     protected final static int INNER_ORDER = 5;
     @JsonView(Views.Public.class)
@@ -12,7 +20,6 @@ public abstract class Node<TKey extends Comparable<TKey>> {
     protected Node<TKey> parentNode;
     protected Node<TKey> leftSibling;
     protected Node<TKey> rightSibling;
-
 
     protected Node() {
         this.keys = new ArrayList<TKey>();

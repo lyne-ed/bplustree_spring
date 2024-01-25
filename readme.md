@@ -1,5 +1,17 @@
 # B+ Tree implementation
 
+
+## ⚠️ A lire
+
+Suivre la section How to run, ensuite quand l'app est lancée, pour tester :
+
+- Import (entries au format csv) : [http://localhost:8080/import?filePath=src/main/resources/10000_entries.csv](http://localhost:8080/import?filePath=src/main/resources/10000_entries.csv)
+- Save (au format json un arbre) : [http://localhost:8080/save?filePath=src/main/resources/output.json](http://localhost:8080/save?filePath=src/main/resources/output.json)
+- Import (arbre au format json) : [http://localhost:8080/import?filePath=src/main/resources/output.json](http://localhost:8080/import?filePath=src/main/resources/output.json)
+- Benchmark : [http://localhost:8080/benchmark?filePath=src/main/resources/10000_entries.csv](http://localhost:8080/benchmark?filePath=src/main/resources/10000_entries.csv)
+
+On peut modifier les fichiers et leurs noms dans les calls des endpoints dans les paramètres des requêtes
+
 ## Introduction
 This is a basic implementation of a B+ Tree in Java. It supports the following operations:
 * Insert
